@@ -26,6 +26,13 @@ type textTemplate struct {
 type Data interface{}
 
 type Context struct {
+	TemplateEnvironment
+
+	// Simple container to hold ANY object
+	Data
+}
+
+type TemplateEnvironment struct {
 	Root     bool
 	PWD      string
 	Folder   string
@@ -35,14 +42,16 @@ type Context struct {
 	Code     int
 	Env      map[string]string
 	OS       string
-
-	// Simple container to hold ANY object
-	Data
 }
+
+var (
+	templateCache TemplateEnvironment
+)
 
 func (c *Context) init(t *textTemplate) {
 	c.Data = t.Context
-	if t.Env == nil {
+	if templateCache.Env != nil {
+		c.TemplateEnvironment = templateCache
 		return
 	}
 	c.Root = t.Env.isRunningAsRoot()
@@ -66,6 +75,7 @@ func (c *Context) init(t *textTemplate) {
 		}
 	}
 	c.OS = goos
+	templateCache = c.TemplateEnvironment
 }
 
 func (t *textTemplate) render() (string, error) {
